@@ -1,21 +1,63 @@
-import Container from "@mui/material/Container";
-import Typography from "@mui/material/Typography";
-import Paper from "@mui/material/Paper";
+import {
+  Container,
+  Typography,
+  Paper,
+  Box,
+  Divider,
+} from "@mui/material";
+import EmojiPeopleIcon from "@mui/icons-material/EmojiPeople";
 
 function HomePage({ user }) {
   return (
-    <Container maxWidth="sm" sx={{ mt: 8 }}>
-      <Paper elevation={3} sx={{ p: 4, textAlign: "center" }}>
-        <Typography variant="h4" gutterBottom>
-          Welcome {user ? user.name : "to Google Auth WebApp"}!
-        </Typography>
-        <Typography variant="body1">
-          {user
-            ? "You are logged in. Enjoy exploring the app!"
-            : "Please log in to access more features."}
-        </Typography>
-      </Paper>
-    </Container>
+    <Box
+      sx={{
+        height: "100vh",
+        width: "100%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "linear-gradient(to right, #e0f7fa, #ffffff)",
+        p: 2,
+      }}
+    >
+      <Container maxWidth="sm" sx={{ p: 0 }}>
+        <Paper
+          elevation={4}
+          sx={{
+            borderRadius: 4,
+            overflow: "hidden",
+          }}
+        >
+          <Box
+            sx={{
+              background: "linear-gradient(135deg, #007aff, #0051c7)",
+              color: "white",
+              textAlign: "center",
+              py: 4,
+            }}
+          >
+            <EmojiPeopleIcon sx={{ fontSize: 60, mb: 1 }} />
+            <Typography variant="h5" fontWeight={600}>
+              {user ? `Welcome, ${user.name}!` : "Welcome to Google Auth WebApp"}
+            </Typography>
+          </Box>
+
+          <Box sx={{ p: 4, textAlign: "center" }}>
+            <Typography variant="body1" sx={{ mb: 2 }}>
+              {user
+                ? "You're successfully logged in. Enjoy exploring the app and its features."
+                : "Please log in to unlock the full experience."}
+            </Typography>
+
+            <Divider sx={{ my: 2 }} />
+
+            <Typography variant="body2" color="text.secondary">
+              Secure authentication powered by Google or email.
+            </Typography>
+          </Box>
+        </Paper>
+      </Container>
+    </Box>
   );
 }
 

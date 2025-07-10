@@ -1,15 +1,19 @@
-import React, { useState } from "react";
-import Container from "@mui/material/Container";
-import Paper from "@mui/material/Paper";
-import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
-import Box from "@mui/material/Box";
-import TextField from "@mui/material/TextField";
-import Divider from "@mui/material/Divider";
+import { useState } from "react";
+import {
+  Container,
+  Paper,
+  Typography,
+  Button,
+  Box,
+  TextField,
+  Divider,
+  Stack,
+  useTheme,
+  useMediaQuery,
+} from "@mui/material";
 import { GoogleLogin } from "@react-oauth/google";
 import { useNavigate } from "react-router-dom";
 
-// Email and password validation helpers
 const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 const validatePassword = (password) =>
   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d@$!%*?&]{8,}$/.test(password);
@@ -23,81 +27,49 @@ function LoginPage({ setUser }) {
   const [registerMode, setRegisterMode] = useState(false);
 
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
-  // Email/password login
   const handleEmailLogin = (e) => {
     e.preventDefault();
-    if (!validateEmail(email)) {
-      setError("Please enter a valid email address.");
-      return;
-    }
-    if (!password) {
-      setError("Please enter your password.");
-      return;
-    }
+    if (!validateEmail(email)) return setError("Invalid email address.");
+    if (!password) return setError("Please enter your password.");
     const users = JSON.parse(localStorage.getItem("localUsers") || "[]");
-    const found = users.find(
-      (u) => u.email === email && u.password === password
-    );
+    const found = users.find((u) => u.email === email && u.password === password);
     if (found) {
       setUser({ name: found.name, email: found.email, picture: "" });
-      setError("");
-      setEmail("");
-      setPassword("");
-      setFullName("");
-      setConfirmPassword("");
+      resetForm();
       navigate("/");
     } else {
       setError("Invalid email or password.");
     }
   };
 
-  // Registration
   const handleRegister = (e) => {
     e.preventDefault();
-    if (!fullName || !email || !password || !confirmPassword) {
-      setError("Please fill in all fields.");
-      return;
-    }
-    if (!validateEmail(email)) {
-      setError("Please enter a valid email address.");
-      return;
-    }
-    if (!validatePassword(password)) {
-      setError(
-        "Password must be at least 8 characters, include uppercase, lowercase, and a number."
-      );
-      return;
-    }
-    if (password !== confirmPassword) {
-      setError("Passwords do not match.");
-      return;
-    }
+    if (!fullName || !email || !password || !confirmPassword)
+      return setError("Please fill in all fields.");
+    if (!validateEmail(email)) return setError("Invalid email address.");
+    if (!validatePassword(password))
+      return setError("Password must be at least 8 characters with uppercase, lowercase, and a number.");
+    if (password !== confirmPassword) return setError("Passwords do not match.");
     const users = JSON.parse(localStorage.getItem("localUsers") || "[]");
-    if (users.find((u) => u.email === email)) {
-      setError("User already exists.");
-      return;
-    }
+    if (users.find((u) => u.email === email)) return setError("User already exists.");
     users.push({ name: fullName, email, password });
     localStorage.setItem("localUsers", JSON.stringify(users));
     setUser({ name: fullName, email, picture: "" });
-    setError("");
-    setEmail("");
-    setPassword("");
-    setFullName("");
-    setConfirmPassword("");
+    resetForm();
     navigate("/");
   };
 
-  // Google login
   const handleGoogleSuccess = (credentialResponse) => {
-    const base64Url = credentialResponse.credential.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const base64Url = credentialResponse.credential.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
     const jsonPayload = decodeURIComponent(
       atob(base64)
-        .split('')
-        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-        .join('')
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
     );
     const userObj = JSON.parse(jsonPayload);
     setUser({
@@ -105,153 +77,136 @@ function LoginPage({ setUser }) {
       email: userObj.email,
       picture: userObj.picture || userObj.picture_url || "",
     });
+    resetForm();
+    navigate("/");
+  };
+
+  const resetForm = () => {
     setEmail("");
     setPassword("");
     setFullName("");
     setConfirmPassword("");
     setError("");
-    navigate("/");
-  };
-
-  const handleGoogleError = () => {
-    setError("Google Login Failed. Please try again.");
   };
 
   return (
-    <Container maxWidth="sm" sx={{ mt: 8 }}>
-      <Paper elevation={3} sx={{ p: 4, textAlign: "center" }}>
-        <Typography variant="h4" gutterBottom>
-          {registerMode ? "Register for Google Auth WebApp" : "Sign in to Google Auth WebApp"}
-        </Typography>
-        {!registerMode && (
-          <>
-            <Box sx={{ mt: 4 }}>
-              <GoogleLogin onSuccess={handleGoogleSuccess} onError={handleGoogleError} />
-            </Box>
-            <Divider sx={{ my: 4 }}>or</Divider>
-            <form onSubmit={handleEmailLogin}>
-              <TextField
-                label="Email"
-                type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                fullWidth
-                margin="normal"
-                error={!!error && error.toLowerCase().includes("email")}
-                helperText={!!error && error.toLowerCase().includes("email") ? error : ""}
-              />
-              <TextField
-                label="Password"
-                type="password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                fullWidth
-                margin="normal"
-                error={!!error && error.toLowerCase().includes("password")}
-                helperText={!!error && error.toLowerCase().includes("password") ? error : ""}
-              />
-              <Button type="submit" variant="contained" color="primary" fullWidth sx={{ mt: 2 }}>
-                Login with Email
-              </Button>
-            </form>
-            <Button
-              variant="text"
-              color="secondary"
-              fullWidth
-              sx={{ mt: 1 }}
-              onClick={() => {
-                setRegisterMode(true);
-                setError("");
-                setEmail("");
-                setPassword("");
-                setFullName("");
-                setConfirmPassword("");
-              }}
-            >
-              Register
-            </Button>
-          </>
-        )}
-        {registerMode && (
-          <>
-            <form onSubmit={handleRegister}>
+    <Box
+      sx={{
+        minHeight: "100vh",
+        background: "linear-gradient(to right, #e0f7fa, #ffffff)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        px: 2,
+      }}
+    >
+      <Container maxWidth="xs">
+        <Paper
+          elevation={4}
+          sx={{
+            p: 4,
+            borderRadius: 4,
+            bgcolor: "background.paper",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
+            backdropFilter: "blur(8px)",
+          }}
+        >
+          <Typography
+            variant="h5"
+            align="center"
+            fontWeight={600}
+            mb={3}
+            sx={{ color: "primary.main" }}
+          >
+            {registerMode ? "Create an Account" : "Welcome Back"}
+          </Typography>
+
+          <Stack spacing={2} component="form" onSubmit={registerMode ? handleRegister : handleEmailLogin}>
+            {registerMode && (
               <TextField
                 label="Full Name"
-                type="text"
                 value={fullName}
-                onChange={e => setFullName(e.target.value)}
+                onChange={(e) => setFullName(e.target.value)}
                 fullWidth
-                margin="normal"
-                error={!!error && error.toLowerCase().includes("name")}
-                helperText={!!error && error.toLowerCase().includes("name") ? error : ""}
+                required
               />
-              <TextField
-                label="Email"
-                type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                fullWidth
-                margin="normal"
-                error={!!error && error.toLowerCase().includes("email")}
-                helperText={!!error && error.toLowerCase().includes("email") ? error : ""}
-              />
-              <TextField
-                label="Password"
-                type="password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                fullWidth
-                margin="normal"
-                error={!!error && error.toLowerCase().includes("password") && !error.toLowerCase().includes("confirm")}
-                helperText={!!error && error.toLowerCase().includes("password") && !error.toLowerCase().includes("confirm") ? error : ""}
-              />
+            )}
+
+            <TextField
+              label="Email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              fullWidth
+              required
+            />
+
+            <TextField
+              label="Password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              fullWidth
+              required
+            />
+
+            {registerMode && (
               <TextField
                 label="Confirm Password"
                 type="password"
                 value={confirmPassword}
-                onChange={e => setConfirmPassword(e.target.value)}
+                onChange={(e) => setConfirmPassword(e.target.value)}
                 fullWidth
-                margin="normal"
-                error={!!error && error.toLowerCase().includes("confirm")}
-                helperText={!!error && error.toLowerCase().includes("confirm") ? error : ""}
+                required
               />
-              <Button type="submit" variant="contained" color="primary" fullWidth sx={{ mt: 2 }}>
-                Register
-              </Button>
-            </form>
+            )}
+
+            {error && (
+              <Typography variant="body2" color="error" textAlign="center">
+                {error}
+              </Typography>
+            )}
+
+            <Button
+              variant="contained"
+              type="submit"
+              fullWidth
+              sx={{ py: 1.4, fontWeight: 600, fontSize: "1rem" }}
+            >
+              {registerMode ? "Register" : "Login"}
+            </Button>
+
+            <Divider sx={{ my: 1.5 }}>OR</Divider>
+
+            <Box textAlign="center">
+              <GoogleLogin onSuccess={handleGoogleSuccess} onError={() => setError("Google login failed.")} />
+            </Box>
+
             <Button
               variant="text"
-              color="secondary"
               fullWidth
-              sx={{ mt: 1 }}
               onClick={() => {
-                setRegisterMode(false);
-                setError("");
-                setEmail("");
-                setPassword("");
-                setFullName("");
-                setConfirmPassword("");
+                setRegisterMode((prev) => !prev);
+                resetForm();
               }}
+              sx={{ mt: 1, textTransform: "none" }}
             >
-              Back to Login
+              {registerMode ? "Back to Login" : "Create an Account"}
             </Button>
-          </>
-        )}
-        {error && !(
-          error.toLowerCase().includes("email") ||
-          error.toLowerCase().includes("password") ||
-          error.toLowerCase().includes("name") ||
-          error.toLowerCase().includes("confirm")
-        ) && (
-          <Typography color="error" sx={{ mt: 2 }}>
-            {error}
+          </Stack>
+
+          <Typography
+            variant="caption"
+            display="block"
+            textAlign="center"
+            mt={4}
+            color="text.secondary"
+          >
+            Authentication powered by Google or email. Your data is secure.
           </Typography>
-        )}
-        <Typography variant="body2" sx={{ mt: 4, color: "text.secondary" }}>
-          Your authentication is secure and powered by Google or email.
-        </Typography>
-      </Paper>
-    </Container>
+        </Paper>
+      </Container>
+    </Box>
   );
 }
 
