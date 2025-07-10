@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/google-auth-webapp/static/css/main.8c3a8774.css",
+    "main.js": "/google-auth-webapp/static/js/main.0411623d.js",
+    "index.html": "/google-auth-webapp/index.html",
+    "main.8c3a8774.css.map": "/google-auth-webapp/static/css/main.8c3a8774.css.map",
+    "main.0411623d.js.map": "/google-auth-webapp/static/js/main.0411623d.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.8c3a8774.css",
+    "static/js/main.0411623d.js"
+  ]
+}
