@@ -60,4 +60,4 @@ This project is a web application that allows users to authenticate using Google
 
 ## License
 
-This project is licensed under the MIT License.
+All rights reserved.
